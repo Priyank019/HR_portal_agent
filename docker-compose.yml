@@ -1,1 +1,21 @@
-services: {}
+services:
+	postgres:
+		image: postgres:16-alpine
+		container_name: hr-portal-auth-postgres
+		restart: unless-stopped
+		ports:
+			- '5432:5432'
+		environment:
+			POSTGRES_DB: hr_portal_auth
+			POSTGRES_USER: postgres
+			POSTGRES_PASSWORD: postgres
+		volumes:
+			- hr_portal_auth_postgres_data:/var/lib/postgresql/data
+		healthcheck:
+			test: ['CMD-SHELL', 'pg_isready -U postgres -d hr_portal_auth']
+			interval: 10s
+			timeout: 5s
+			retries: 5
+
+volumes:
+	hr_portal_auth_postgres_data:

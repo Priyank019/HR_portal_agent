@@ -24,7 +24,9 @@ export const forwardRequest = async (req: Request, res: Response, targetUrl: str
       continue;
     }
 
-    headers.set(key, value);
+    if (typeof value === 'string') {
+      headers.set(key, value);
+    }
   }
 
   const hasBody = !['GET', 'HEAD'].includes(req.method);
@@ -42,8 +44,16 @@ export const forwardRequest = async (req: Request, res: Response, targetUrl: str
 
   res.status(response.status);
 
+  const setCookieHeader = typeof (response.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie === 'function'
+    ? (response.headers as Headers & { getSetCookie: () => string[] }).getSetCookie()
+    : [];
+
+  if (setCookieHeader.length > 0) {
+    res.setHeader('set-cookie', setCookieHeader);
+  }
+
   response.headers.forEach((value, key) => {
-    if (!hopByHopHeaders.has(key.toLowerCase())) {
+    if (!hopByHopHeaders.has(key.toLowerCase()) && key.toLowerCase() !== 'set-cookie') {
       res.setHeader(key, value);
     }
   });

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hr-portal/auth-contracts": "file:../../packages/auth-contracts",
     "@hookform/resolvers": "^3.5.0",
     "@tanstack/react-query": "^5.56.2",
     "axios": "^1.7.9",

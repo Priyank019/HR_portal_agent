@@ -4,12 +4,23 @@ import { loginRequestSchema, refreshTokenRequestSchema, registerRequestSchema } 
 import { unauthorized } from '../errors/http-error.js';
 
 const refreshTokenCookieName = 'refreshToken';
+const refreshTokenCookieOptions = {
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/auth',
+};
+
+const setRefreshTokenCookie = (res: Response, refreshToken: string) => {
+  res.cookie(refreshTokenCookieName, refreshToken, refreshTokenCookieOptions);
+};
 
 export const authController = {
   async register(req: Request, res: Response, next: NextFunction) {
     try {
       const payload = registerRequestSchema.parse(req.body);
       const result = await authService.register(payload);
+      setRefreshTokenCookie(res, result.tokens.refreshToken);
       res.status(201).json(result);
     } catch (error) {
       next(error);
@@ -20,6 +31,7 @@ export const authController = {
     try {
       const payload = loginRequestSchema.parse(req.body);
       const result = await authService.login(payload);
+      setRefreshTokenCookie(res, result.tokens.refreshToken);
       res.status(200).json(result);
     } catch (error) {
       next(error);
@@ -37,6 +49,7 @@ export const authController = {
       }
 
       const result = await authService.refresh({ refreshToken });
+      setRefreshTokenCookie(res, result.tokens.refreshToken);
       res.status(200).json(result);
     } catch (error) {
       next(error);
