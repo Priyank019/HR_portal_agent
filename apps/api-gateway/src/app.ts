@@ -9,8 +9,18 @@ export const createApp = () => {
   const app = express();
 
   app.use(helmet());
+  console.log("Using Gateway CORS:", env.CORS_ORIGIN);
   app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
   app.use(express.json());
+
+  app.use((req, _res, next) => {
+  console.log("========== GATEWAY REQUEST ==========");
+  console.log("Method:", req.method);
+  console.log("URL:", req.originalUrl);
+  console.log("Origin:", req.headers.origin);
+  console.log("=====================================");
+  next();
+});
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok', service: 'api-gateway' });

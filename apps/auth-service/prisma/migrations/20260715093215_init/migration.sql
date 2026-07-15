@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('Employee', 'HR', 'Admin');
+CREATE TYPE "Role" AS ENUM ('EMPLOYEE', 'HR', 'ADMIN');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -7,9 +7,9 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'Employee',
+    "role" "Role" NOT NULL DEFAULT 'EMPLOYEE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -22,7 +22,7 @@ CREATE TABLE "RefreshToken" (
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "revokedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "RefreshToken_pkey" PRIMARY KEY ("id")
 );

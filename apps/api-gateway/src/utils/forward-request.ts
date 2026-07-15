@@ -36,12 +36,24 @@ export const forwardRequest = async (req: Request, res: Response, targetUrl: str
     headers.set('content-type', 'application/json');
   }
 
+    console.log("\n========== FORWARD REQUEST ==========");
+    console.log("Target URL:", targetUrl);
+    console.log("Method:", req.method);
+    console.log("Origin Header:", req.headers.origin);
+    console.log("=====================================\n");
   const response = await fetch(targetUrl, {
     method: req.method,
     headers,
     body,
   });
+  console.log("\n========== RESPONSE FROM AUTH ==========");
+    console.log("Status:", response.status);
 
+    response.headers.forEach((value, key) => {
+    console.log(`${key}: ${value}`);
+    });
+
+    console.log("========================================\n");
   res.status(response.status);
 
   const setCookieHeader = typeof (response.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie === 'function'

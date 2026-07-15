@@ -28,6 +28,9 @@ export const authController = {
   },
 
   async login(req: Request, res: Response, next: NextFunction) {
+    console.log("========== LOGIN ==========");
+    console.log(req.body);
+    console.log("===========================");
     try {
       const payload = loginRequestSchema.parse(req.body);
       const result = await authService.login(payload);

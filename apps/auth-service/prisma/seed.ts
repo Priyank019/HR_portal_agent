@@ -29,7 +29,7 @@ async function main() {
       name: "System Administrator",
       email: adminEmail,
       passwordHash: hashedPassword,
-      role: Role.Admin, // Change to Role.ADMIN if you update the enum
+      role: Role.ADMIN, // Change to Role.ADMIN if you update the enum
     },
   });
 
