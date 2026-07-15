@@ -5,6 +5,9 @@
   "type": "module",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
