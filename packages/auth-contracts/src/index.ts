@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const authRoleSchema = z.enum(['Employee', 'HR', 'Admin']);
+export const authRoleSchema = z.enum(['EMPLOYEE', 'HR', 'ADMIN']);
 
 export const registerRequestSchema = z.object({
   name: z.string().min(2, 'Name is required'),

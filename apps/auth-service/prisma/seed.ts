@@ -1,3 +1,5 @@
+// taskkill /IM node.exe /F
+// npm run dev
 // Email:
 // admin@hrportal.com
 // 
