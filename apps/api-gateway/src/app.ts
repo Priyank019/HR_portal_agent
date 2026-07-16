@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env.js';
 import { authGatewayRouter } from './routes/auth.routes.js';
+import { ragGatewayRouter } from './routes/rag.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 export const createApp = () => {
@@ -27,6 +28,7 @@ export const createApp = () => {
   });
 
   app.use('/auth', authGatewayRouter);
+  app.use('/api', ragGatewayRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

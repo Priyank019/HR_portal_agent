@@ -16,7 +16,7 @@ export const createApp = () => {
     res.status(200).json({ status: 'ok', service: 'rag-service' });
   });
 
-  app.use('/rag', ragRouter);
+  app.use('/api', ragRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 
