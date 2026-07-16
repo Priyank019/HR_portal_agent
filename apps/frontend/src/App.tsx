@@ -7,6 +7,7 @@ import {
   MessageSquareText,
 } from 'lucide-react';
 import { RequireAuth, RequireRole } from './components/route-guards';
+import { ChatPanel } from './components/ChatPanel';
 import { AppShell } from './layouts/AppShell';
 import { AccessDeniedPage } from './pages/AccessDeniedPage';
 import { LoginPage } from './pages/LoginPage';
@@ -21,7 +22,7 @@ function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/assistant" element={<PlaceholderPage title="AI Assistant" icon={<LayoutDashboard size={18} />} />} />
+          <Route path="/assistant" element={<AssistantPage />} />
           <Route path="/documents" element={<PlaceholderPage title="Documents" icon={<FileText size={18} />} />} />
           <Route path="/history" element={<PlaceholderPage title="Chat History" icon={<MessageSquareText size={18} />} />} />
           <Route path="/analytics" element={<PlaceholderPage title="Analytics" icon={<ChartColumnIncreasing size={18} />} />} />
@@ -105,6 +106,20 @@ function DashboardPage() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function AssistantPage() {
+  return (
+    <div className="space-y-6">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Assistant</p>
+        <h2 className="mt-2 text-3xl font-semibold text-slate-900">AI Assistant</h2>
+        <p className="mt-2 text-sm text-slate-600">Ask one question and receive one response from the assistant.</p>
+      </section>
+
+      <ChatPanel />
     </div>
   );
 }
