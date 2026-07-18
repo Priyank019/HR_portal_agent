@@ -1,8 +1,8 @@
 import { Router } from 'express';
+import { documentController } from '../controllers/document.controller.js';
 
 export const documentRouter = Router();
 
-// Upload implementation is intentionally deferred.
-documentRouter.get('/', (_req, res) => {
-  res.status(200).json({ items: [] });
-});
+documentRouter.get('/', documentController.list);
+documentRouter.get('/:id', documentController.getById);
+documentRouter.delete('/:id', documentController.remove);

@@ -17,7 +17,7 @@ export const userRepository = {
     name: string;
     email: string;
     passwordHash: string;
-    role: 'Employee' | 'HR' | 'Admin';
+    role: 'EMPLOYEE' | 'HR' | 'ADMIN';
   }) {
     return prisma.user.create({
       data,
