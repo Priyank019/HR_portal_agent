@@ -41,9 +41,11 @@ export function ChatPanel() {
     setIsLoading(true);
 
     try {
-      const response = await chatApi.ask(trimmed);
-      setCurrentAnswer(response.answer);
-      setQuestion('');
+    await chatApi.ask(trimmed, (partialAnswer) => {
+        setCurrentAnswer(partialAnswer);
+    });
+
+    setQuestion('');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch chat response';
       setErrorMessage(message);

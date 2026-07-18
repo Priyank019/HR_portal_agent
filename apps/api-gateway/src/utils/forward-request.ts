@@ -70,6 +70,14 @@ export const forwardRequest = async (req: Request, res: Response, targetUrl: str
     }
   });
 
+  const contentType = response.headers.get('content-type') ?? '';
+
+if (!response.body) {
+  res.end();
+  return;
+}
+
+if (contentType.includes('application/json')) {
   const responseText = await response.text();
 
   if (!responseText) {
@@ -77,12 +85,20 @@ export const forwardRequest = async (req: Request, res: Response, targetUrl: str
     return;
   }
 
-  const contentType = response.headers.get('content-type') ?? '';
+  res.json(JSON.parse(responseText));
+  return;
+}
 
-  if (contentType.includes('application/json')) {
-    res.json(JSON.parse(responseText));
-    return;
-  }
+// Stream non-JSON responses
+const reader = response.body.getReader();
 
-  res.send(responseText);
+while (true) {
+  const { done, value } = await reader.read();
+
+  if (done) break;
+
+  res.write(Buffer.from(value));
+}
+
+res.end();
 };

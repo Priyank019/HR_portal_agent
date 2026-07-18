@@ -1,13 +1,13 @@
-import { GoogleGenAI } from '@google/genai';
-import { env } from '../config/env.js';
+import { GoogleGenAI } from "@google/genai";
+import { env } from "../config/env.js";
 
-const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({
+  apiKey: env.GEMINI_API_KEY,
+});
 
-export const generateAnswer = async (question: string): Promise<string> => {
-  const response = await ai.models.generateContent({
+export const generateAnswerStream = async (question: string) => {
+  return await ai.models.generateContentStream({
     model: env.GEMINI_MODEL,
     contents: question,
   });
-
-  return response.text?.trim() || 'No response generated.';
 };
