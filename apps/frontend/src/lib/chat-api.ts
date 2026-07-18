@@ -13,6 +13,7 @@ const gatewayBaseUrl = import.meta.env.VITE_API_GATEWAY_URL ?? 'http://localhost
 const api = axios.create({
   baseURL: gatewayBaseUrl,
   withCredentials: true,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -29,8 +29,8 @@ const sidebarItems: SidebarItem[] = [
   { label: 'Documents', icon: FileText, to: '/documents' },
   { label: 'Chat History', icon: History, to: '/history' },
   { label: 'Analytics', icon: ChartColumnIncreasing, to: '/analytics' },
-  { label: 'HR Dashboard', icon: BriefcaseBusiness, to: '/hr', roles: ['HR', 'Admin'] },
-  { label: 'Admin', icon: ShieldCheck, to: '/admin', roles: ['Admin'] },
+  { label: 'HR Dashboard', icon: BriefcaseBusiness, to: '/hr', roles: ['HR', 'ADMIN'] },
+  { label: 'Admin', icon: ShieldCheck, to: '/admin', roles: ['ADMIN'] },
   { label: 'Profile', icon: CircleUserRound, to: '/profile' },
   { label: 'Settings', icon: Settings, to: '/settings' },
 ];

@@ -27,12 +27,12 @@ function App() {
           <Route path="/history" element={<PlaceholderPage title="Chat History" icon={<MessageSquareText size={18} />} />} />
           <Route path="/analytics" element={<PlaceholderPage title="Analytics" icon={<ChartColumnIncreasing size={18} />} />} />
 
-          <Route element={<RequireRole allowedRoles={['HR', 'Admin']} />}>
+          <Route element={<RequireRole allowedRoles={['HR', 'ADMIN']} />}>
             <Route path="/hr" element={<HRDashboardPage />} />
             <Route path="/hr-dashboard" element={<Navigate to="/hr" replace />} />
           </Route>
 
-          <Route element={<RequireRole allowedRoles={['Admin']} />}>
+          <Route element={<RequireRole allowedRoles={['ADMIN']} />}>
             <Route path="/admin" element={<AdminPage />} />
           </Route>
 
