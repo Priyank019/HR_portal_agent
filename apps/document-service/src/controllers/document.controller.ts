@@ -2,6 +2,7 @@ import { access } from 'node:fs/promises';
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 import { badRequest } from '../errors/http-error.js';
+import { documentProcessingService } from '../services/document-processing.service.js';
 import { documentService } from '../services/document.service.js';
 import { getDocumentFilePath } from '../utils/document-files.js';
 
@@ -70,7 +71,7 @@ export const documentController = {
       }
 
       const { uploadedBy } = uploadBodySchema.parse(req.body);
-      const document = await documentService.createUploadedDocument({
+      const createdDocument = await documentService.createUploadedDocument({
         fileName: req.file.filename,
         originalName: req.file.originalname,
         mimeType: req.file.mimetype,
@@ -79,7 +80,13 @@ export const documentController = {
         uploadedBy,
       });
 
-      res.status(201).json({ document });
+      const extractedDocument = await documentProcessingService.processUploadedDocument(createdDocument.id);
+      const document = await documentService.getDocumentById(createdDocument.id);
+
+      res.status(201).json({
+        document,
+        extractedDocument,
+      });
     } catch (error) {
       next(error);
     }

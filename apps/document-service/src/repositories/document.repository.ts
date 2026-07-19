@@ -21,6 +21,15 @@ export const documentRepository = {
     });
   },
 
+  updateStatus(id: string, status: 'UPLOADED' | 'PROCESSING' | 'PROCESSED' | 'FAILED') {
+    return prisma.document.update({
+      where: { id },
+      data: {
+        status,
+      },
+    });
+  },
+
   create(data: {
     fileName: string;
     originalName: string;
