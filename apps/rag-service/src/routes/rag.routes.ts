@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { badRequest } from '../errors/http-error.js';
+import { chatHistoryService } from '../services/chat-history.service.js';
 import { ragService } from '../services/rag.service.js';
 import { searchService } from '../services/search.service.js';
 
@@ -38,7 +39,12 @@ ragRouter.post('/chat', async (req, res, next) => {
       typeof req.body?.question === 'string'
         ? req.body.question.trim()
         : '';
+    const conversationId =
+      typeof req.body?.conversationId === 'string'
+        ? req.body.conversationId.trim()
+        : '';
     const limit = typeof req.body?.limit === 'number' ? req.body.limit : undefined;
+    const authorizationHeader = typeof req.headers.authorization === 'string' ? req.headers.authorization : undefined;
 
     if (!question) {
       throw badRequest('Question is required');
@@ -51,9 +57,35 @@ ragRouter.post('/chat', async (req, res, next) => {
     res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
     res.setHeader('Transfer-Encoding', 'chunked');
 
-    await ragService.streamAnswer(question, limit, (event) => {
-      res.write(ragService.serializeEvent(event));
-    });
+    let conversationHistory: import('../services/rag.service.js').ConversationHistoryMessage[] = [];
+
+    if (conversationId) {
+      await chatHistoryService.saveUserMessage(conversationId, question, authorizationHeader);
+      const conversation = await chatHistoryService.getConversation(conversationId, authorizationHeader);
+      conversationHistory = conversation.messages.map((message) => ({
+        role: message.role,
+        content: message.content,
+        createdAt: message.createdAt,
+      }));
+    }
+
+    await ragService.streamAnswer(
+      question,
+      limit,
+      (event) => {
+        res.write(ragService.serializeEvent(event));
+      },
+      {
+        conversationHistory,
+        beforeComplete: async (response) => {
+          if (!conversationId) {
+            return;
+          }
+
+          await chatHistoryService.saveAssistantMessage(conversationId, response.answer, authorizationHeader);
+        },
+      },
+    );
 
     res.end();
   } catch (error) {

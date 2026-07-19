@@ -41,4 +41,25 @@ export const conversationService = {
 
     return toConversationDto(conversation);
   },
+
+  async updateConversation(input: { conversationId: string; userId: string; title: string }) {
+    const conversation = await conversationRepository.findByIdAndUserId(input.conversationId, input.userId);
+
+    if (!conversation) {
+      throw notFound('Conversation not found');
+    }
+
+    const updatedConversation = await conversationRepository.updateTitle(input.conversationId, input.title.trim());
+    return toConversationDto(updatedConversation);
+  },
+
+  async deleteConversation(conversationId: string, userId: string) {
+    const conversation = await conversationRepository.findByIdAndUserId(conversationId, userId);
+
+    if (!conversation) {
+      throw notFound('Conversation not found');
+    }
+
+    await conversationRepository.delete(conversationId);
+  },
 };

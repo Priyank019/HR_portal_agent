@@ -5,6 +5,8 @@ export const conversationRouter = Router();
 
 conversationRouter.get('/', conversationController.listConversations);
 conversationRouter.post('/', conversationController.createConversation);
-conversationRouter.get('/:conversationId', conversationController.getConversation);
-conversationRouter.get('/:conversationId/messages', conversationController.listMessages);
-conversationRouter.post('/:conversationId/messages', conversationController.createMessage);
+conversationRouter.get('/:id', conversationController.getConversation);
+conversationRouter.patch('/:id', conversationController.updateConversation);
+conversationRouter.delete('/:id', conversationController.deleteConversation);
+conversationRouter.get('/:id/messages', conversationController.listMessages);
+conversationRouter.post('/:id/messages', conversationController.createMessage);

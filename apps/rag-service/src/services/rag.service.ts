@@ -34,12 +34,23 @@ export type RAGStreamEvent =
       type: 'complete';
     } & RAGResponse);
 
+export type ConversationHistoryMessage = {
+  role: 'USER' | 'ASSISTANT';
+  content: string;
+  createdAt?: string;
+};
+
 type RAGContext = {
   prompt: string;
   retrievedChunks: SearchResult[];
   sources: RAGSource[];
   similarityScores: number[];
   retrievedChunkCount: number;
+};
+
+type StreamAnswerOptions = {
+  conversationHistory?: ConversationHistoryMessage[];
+  beforeComplete?: (response: RAGResponse) => Promise<void> | void;
 };
 
 const normalizeQuestion = (question: string) => {
@@ -73,7 +84,11 @@ const toSource = (chunk: SearchResult): RAGSource => ({
 const toNdjson = (event: RAGStreamEvent) => `${JSON.stringify(event)}\n`;
 
 export class RAGService {
-  async retrieveContext(question: string, limit = defaultLimit): Promise<RAGContext> {
+  async retrieveContext(
+    question: string,
+    limit = defaultLimit,
+    conversationHistory: ConversationHistoryMessage[] = [],
+  ): Promise<RAGContext> {
     const normalizedQuestion = normalizeQuestion(question);
     const normalizedLimit = normalizeLimit(limit);
     const retrievedChunks = await searchService.semanticSearch(normalizedQuestion, normalizedLimit);
@@ -81,7 +96,7 @@ export class RAGService {
     const similarityScores = retrievedChunks.map((chunk) => chunk.score);
 
     return {
-      prompt: this.buildPrompt(normalizedQuestion, retrievedChunks),
+      prompt: this.buildPrompt(normalizedQuestion, retrievedChunks, conversationHistory),
       retrievedChunks,
       sources,
       similarityScores,
@@ -89,8 +104,21 @@ export class RAGService {
     };
   }
 
-  buildPrompt(question: string, retrievedChunks: SearchResult[]) {
+  buildPrompt(
+    question: string,
+    retrievedChunks: SearchResult[],
+    conversationHistory: ConversationHistoryMessage[] = [],
+  ) {
     const normalizedQuestion = normalizeQuestion(question);
+    const conversationBlock =
+      conversationHistory.length === 0
+        ? 'No prior conversation history is available.'
+        : conversationHistory
+            .map((message, index) => {
+              const timestamp = message.createdAt ? ` (${message.createdAt})` : '';
+              return `${index + 1}. ${message.role}${timestamp}: ${message.content}`;
+            })
+            .join('\n');
 
     const contextBlock =
       retrievedChunks.length === 0
@@ -120,6 +148,9 @@ export class RAGService {
       'Answer the question using the retrieved context when it is relevant.',
       'If the context is missing or insufficient, say so clearly and do not invent facts.',
       '',
+      'Conversation History:',
+      conversationBlock,
+      '',
       'Retrieved Context:',
       contextBlock,
       '',
@@ -131,9 +162,13 @@ export class RAGService {
     ].join('\n');
   }
 
-  async generateAnswer(question: string, limit = defaultLimit): Promise<RAGResponse> {
+  async generateAnswer(
+    question: string,
+    limit = defaultLimit,
+    conversationHistory: ConversationHistoryMessage[] = [],
+  ): Promise<RAGResponse> {
     const startedAt = performance.now();
-    const context = await this.retrieveContext(question, limit);
+    const context = await this.retrieveContext(question, limit, conversationHistory);
 
     try {
       const response = await generateContent(context.prompt);
@@ -155,9 +190,10 @@ export class RAGService {
     question: string,
     limit = defaultLimit,
     onEvent?: (event: RAGStreamEvent) => void,
+    options: StreamAnswerOptions = {},
   ): Promise<RAGResponse> {
     const startedAt = performance.now();
-    const context = await this.retrieveContext(question, limit);
+    const context = await this.retrieveContext(question, limit, options.conversationHistory ?? []);
     let answer = '';
 
     try {
@@ -191,6 +227,8 @@ export class RAGService {
         similarityScores: context.similarityScores,
         retrievedChunkCount: context.retrievedChunkCount,
       };
+
+      await options.beforeComplete?.(response);
 
       onEvent?.({
         type: 'complete',

@@ -1,20 +1,18 @@
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
-import { badRequest } from '../errors/http-error.js';
+import { badRequest, unauthorized } from '../errors/http-error.js';
 import { conversationService } from '../services/conversation.service.js';
 import { messageService } from '../services/message.service.js';
 
-const userIdQuerySchema = z.object({
-  userId: z.string().trim().min(1),
-});
-
 const createConversationSchema = z.object({
   title: z.string().trim().min(1).max(255).optional(),
-  userId: z.string().trim().min(1),
+});
+
+const updateConversationSchema = z.object({
+  title: z.string().trim().min(1).max(255),
 });
 
 const createMessageSchema = z.object({
-  userId: z.string().trim().min(1),
   role: z.enum(['USER', 'ASSISTANT']),
   content: z.string().trim().min(1),
 });
@@ -33,11 +31,22 @@ const getConversationId = (value: string | string[] | undefined) => {
   return conversationId;
 };
 
+const getAuthenticatedUserId = (req: Request) => {
+  if (!req.user) {
+    throw unauthorized('Authentication required');
+  }
+
+  return req.user.id;
+};
+
 export const conversationController = {
   async createConversation(req: Request, res: Response, next: NextFunction) {
     try {
       const payload = createConversationSchema.parse(req.body);
-      const conversation = await conversationService.createConversation(payload);
+      const conversation = await conversationService.createConversation({
+        title: payload.title,
+        userId: getAuthenticatedUserId(req),
+      });
       res.status(201).json(conversation);
     } catch (error) {
       next(error);
@@ -46,8 +55,7 @@ export const conversationController = {
 
   async listConversations(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = userIdQuerySchema.parse(req.query);
-      const conversations = await conversationService.listConversations(query.userId);
+      const conversations = await conversationService.listConversations(getAuthenticatedUserId(req));
       res.status(200).json({ items: conversations });
     } catch (error) {
       next(error);
@@ -56,10 +64,9 @@ export const conversationController = {
 
   async getConversation(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = userIdQuerySchema.parse(req.query);
-      const conversationId = getConversationId(req.params.conversationId);
+      const conversationId = getConversationId(req.params.id);
 
-      const conversation = await conversationService.getConversation(conversationId, query.userId);
+      const conversation = await conversationService.getConversation(conversationId, getAuthenticatedUserId(req));
       res.status(200).json(conversation);
     } catch (error) {
       next(error);
@@ -68,10 +75,9 @@ export const conversationController = {
 
   async listMessages(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = userIdQuerySchema.parse(req.query);
-      const conversationId = getConversationId(req.params.conversationId);
+      const conversationId = getConversationId(req.params.id);
 
-      const messages = await messageService.listMessages(conversationId, query.userId);
+      const messages = await messageService.listMessages(conversationId, getAuthenticatedUserId(req));
       res.status(200).json({ items: messages });
     } catch (error) {
       next(error);
@@ -80,17 +86,43 @@ export const conversationController = {
 
   async createMessage(req: Request, res: Response, next: NextFunction) {
     try {
-      const conversationId = getConversationId(req.params.conversationId);
+      const conversationId = getConversationId(req.params.id);
 
       const payload = createMessageSchema.parse(req.body);
       const message = await messageService.createMessage({
         conversationId,
-        userId: payload.userId,
+        userId: getAuthenticatedUserId(req),
         role: payload.role,
         content: payload.content,
       });
 
       res.status(201).json(message);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateConversation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const conversationId = getConversationId(req.params.id);
+      const payload = updateConversationSchema.parse(req.body);
+      const conversation = await conversationService.updateConversation({
+        conversationId,
+        userId: getAuthenticatedUserId(req),
+        title: payload.title,
+      });
+
+      res.status(200).json(conversation);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async deleteConversation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const conversationId = getConversationId(req.params.id);
+      await conversationService.deleteConversation(conversationId, getAuthenticatedUserId(req));
+      res.status(204).send();
     } catch (error) {
       next(error);
     }

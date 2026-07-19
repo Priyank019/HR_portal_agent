@@ -50,6 +50,17 @@ export const conversationRepository = {
     return prisma.conversation.update({
       where: { id },
       data: { title },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+  },
+
+  delete(id: string) {
+    return prisma.conversation.delete({
+      where: { id },
     });
   },
 
