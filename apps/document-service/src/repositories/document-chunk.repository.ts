@@ -1,6 +1,15 @@
 import { prisma } from '../lib/prisma.js';
 
 export const documentChunkRepository = {
+  findManyByDocumentId(documentId: string) {
+    return prisma.documentChunk.findMany({
+      where: { documentId },
+      orderBy: {
+        chunkIndex: 'asc',
+      },
+    });
+  },
+
   deleteManyByDocumentId(documentId: string) {
     return prisma.documentChunk.deleteMany({
       where: { documentId },

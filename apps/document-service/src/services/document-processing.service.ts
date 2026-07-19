@@ -2,6 +2,8 @@ import { notFound } from '../errors/http-error.js';
 import { documentChunkRepository } from '../repositories/document-chunk.repository.js';
 import { documentRepository } from '../repositories/document.repository.js';
 import { chunkDocumentText } from './chunk.service.js';
+import { embeddingService } from './embedding.service.js';
+import { qdrantService } from './qdrant.service.js';
 import { loadPdfDocuments, type PdfDocumentText } from '../loaders/pdf.loader.js';
 
 export const documentProcessingService = {
@@ -34,6 +36,24 @@ export const documentProcessingService = {
 
       await documentChunkRepository.deleteManyByDocumentId(documentId);
       await documentChunkRepository.createMany(documentId, chunkedText);
+
+      const savedChunks = await documentChunkRepository.findManyByDocumentId(documentId);
+      const embeddings = await embeddingService.generateEmbeddings(savedChunks.map((chunk) => chunk.content));
+
+      if (embeddings.length !== savedChunks.length) {
+        throw new Error('Embedding generation did not return a vector for every chunk');
+      }
+
+      await qdrantService.upsertChunks(
+        savedChunks.map((chunk, index) => ({
+          documentId: document.id,
+          fileName: document.originalName,
+          chunkId: chunk.id,
+          chunkIndex: chunk.chunkIndex,
+          text: chunk.content,
+          vector: embeddings[index],
+        })),
+      );
 
       await documentRepository.updateStatus(documentId, 'PROCESSED');
 

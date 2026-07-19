@@ -13,6 +13,9 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4003),
   CORS_ORIGIN: z.string().default('http://10.197.7.142:3000'),
   DATABASE_URL: z.string().min(1),
+  QDRANT_URL: z.string().url().default('http://localhost:6333'),
+  QDRANT_API_KEY: z.string().optional(),
+  EMBEDDING_DIMENSION: z.coerce.number().int().positive(),
 });
 
 export const env = envSchema.parse(process.env);

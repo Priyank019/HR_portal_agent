@@ -2,6 +2,7 @@ import { unlink } from 'node:fs/promises';
 import { notFound } from '../errors/http-error.js';
 import { documentRepository } from '../repositories/document.repository.js';
 import { getDocumentFilePath } from '../utils/document-files.js';
+import { qdrantService } from './qdrant.service.js';
 
 export const documentService = {
   listDocuments() {
@@ -24,6 +25,8 @@ export const documentService = {
     if (!existingDocument) {
       throw notFound('Document not found');
     }
+
+    await qdrantService.deleteDocument(id);
 
     const filePath = getDocumentFilePath(existingDocument.storagePath);
 
