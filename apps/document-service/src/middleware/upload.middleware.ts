@@ -1,18 +1,13 @@
-import { mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import multer from 'multer';
 import { badRequest } from '../errors/http-error.js';
+import { ensureUploadsDir, uploadsDir } from '../utils/document-files.js';
 
-const currentDir = dirname(fileURLToPath(import.meta.url));
-const uploadDir = resolve(currentDir, '../../uploads');
-
-mkdirSync(uploadDir, { recursive: true });
+ensureUploadsDir();
 
 const storage = multer.diskStorage({
   destination: (_req, _file, callback) => {
-    callback(null, uploadDir);
+    callback(null, uploadsDir);
   },
   filename: (_req, file, callback) => {
     const uniqueName = `${Date.now()}-${randomUUID()}.pdf`;

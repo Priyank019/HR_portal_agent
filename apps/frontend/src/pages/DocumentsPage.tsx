@@ -1,5 +1,5 @@
 import { type ChangeEvent, useEffect, useRef, useState } from 'react';
-import { Upload } from 'lucide-react';
+import { ExternalLink, Trash2, Upload } from 'lucide-react';
 import { useAuth } from '../context/auth-context';
 import { documentApi, type DocumentItem } from '../lib/document-api';
 
@@ -24,6 +24,7 @@ export function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -67,6 +68,31 @@ export function DocumentsPage() {
     } finally {
       setIsUploading(false);
       event.target.value = '';
+    }
+  };
+
+  const handleViewDocument = (documentId: string) => {
+    window.open(documentApi.getDocumentViewUrl(documentId), '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDeleteDocument = async (documentId: string) => {
+    const confirmed = window.confirm('Delete this document? This will remove the uploaded file too.');
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingDocumentId(documentId);
+    setErrorMessage(null);
+
+    try {
+      await documentApi.deleteDocument(documentId);
+      await loadDocuments();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete document';
+      setErrorMessage(message);
+    } finally {
+      setDeletingDocumentId(null);
     }
   };
 
@@ -124,6 +150,7 @@ export function DocumentsPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Upload Date</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Size</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -133,6 +160,27 @@ export function DocumentsPage() {
                     <td className="px-4 py-3 text-sm text-slate-600">{formatDate(document.createdAt)}</td>
                     <td className="px-4 py-3 text-sm text-slate-600">{document.status}</td>
                     <td className="px-4 py-3 text-sm text-slate-600">{formatSize(document.size)}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleViewDocument(document.id)}
+                          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                        >
+                          <ExternalLink size={14} />
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteDocument(document.id)}
+                          disabled={deletingDocumentId === document.id}
+                          className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <Trash2 size={14} />
+                          {deletingDocumentId === document.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

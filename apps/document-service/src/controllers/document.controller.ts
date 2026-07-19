@@ -1,7 +1,9 @@
+import { access } from 'node:fs/promises';
 import type { NextFunction, Request, Response } from 'express';
 import { z } from 'zod';
 import { badRequest } from '../errors/http-error.js';
 import { documentService } from '../services/document.service.js';
+import { getDocumentFilePath } from '../utils/document-files.js';
 
 const documentIdParamsSchema = z.object({
   id: z.string().min(1),
@@ -26,6 +28,26 @@ export const documentController = {
       const { id } = documentIdParamsSchema.parse(req.params);
       const document = await documentService.getDocumentById(id);
       res.status(200).json({ document });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async view(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = documentIdParamsSchema.parse(req.params);
+      const document = await documentService.getDocumentById(id);
+      const filePath = getDocumentFilePath(document.storagePath);
+
+      await access(filePath);
+
+      res.setHeader('Content-Type', document.mimeType);
+      res.setHeader('Content-Disposition', `inline; filename="${document.originalName.replace(/"/g, '\\"')}"`);
+      res.sendFile(filePath, (error) => {
+        if (error) {
+          next(error);
+        }
+      });
     } catch (error) {
       next(error);
     }

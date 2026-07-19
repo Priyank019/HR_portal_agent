@@ -29,6 +29,14 @@ export const documentApi = {
     return response.data as { items: DocumentItem[] };
   },
 
+  getDocumentViewUrl(id: string) {
+    return `${gatewayBaseUrl}/documents/${id}/view`;
+  },
+
+  async deleteDocument(id: string): Promise<void> {
+    await api.delete(`/documents/${id}`);
+  },
+
   async uploadPdf(file: File, uploadedBy: string): Promise<{ document: DocumentItem }> {
     const formData = new FormData();
     formData.append('file', file);

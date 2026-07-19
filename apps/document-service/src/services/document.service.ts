@@ -1,5 +1,7 @@
+import { unlink } from 'node:fs/promises';
 import { notFound } from '../errors/http-error.js';
 import { documentRepository } from '../repositories/document.repository.js';
+import { getDocumentFilePath } from '../utils/document-files.js';
 
 export const documentService = {
   listDocuments() {
@@ -21,6 +23,18 @@ export const documentService = {
 
     if (!existingDocument) {
       throw notFound('Document not found');
+    }
+
+    const filePath = getDocumentFilePath(existingDocument.storagePath);
+
+    try {
+      await unlink(filePath);
+    } catch (error: unknown) {
+      const fileSystemError = error as NodeJS.ErrnoException | undefined;
+
+      if (fileSystemError?.code !== 'ENOENT') {
+        throw error;
+      }
     }
 
     await documentRepository.deleteById(id);
