@@ -117,7 +117,7 @@ function AssistantPage() {
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Assistant</p>
         <h2 className="mt-2 text-3xl font-semibold text-slate-900">AI Assistant</h2>
-        <p className="mt-2 text-sm text-slate-600">Ask one question and receive one response from the assistant.</p>
+        <p className="mt-2 text-sm text-slate-600">Use a persistent chat-style workspace with conversation history and the existing authenticated assistant endpoint.</p>
       </section>
 
       <ChatPanel />

@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hr-portal/auth-contracts": "file:../../packages/auth-contracts",
     "@hookform/resolvers": "^3.5.0",
+    "@hr-portal/auth-contracts": "file:../../packages/auth-contracts",
     "@tanstack/react-query": "^5.56.2",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
@@ -25,7 +25,8 @@
     "recharts": "^2.15.0",
     "sonner": "^1.7.2",
     "tailwind-merge": "^2.4.0",
-    "zod": "^3.15.0"
+    "zod": "^3.15.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/react": "^19.1.0",
