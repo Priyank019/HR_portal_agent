@@ -16,17 +16,31 @@ enum DocumentStatus {
 }
 
 model Document {
-  id           String         @id @default(cuid())
+  id           String          @id @default(cuid())
   fileName     String
   originalName String
   mimeType     String
   size         Int
   storagePath  String
-  status       DocumentStatus @default(UPLOADED)
+  status       DocumentStatus  @default(UPLOADED)
   uploadedBy   String
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  chunks       DocumentChunk[]
 
   @@index([uploadedBy])
   @@index([status])
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  chunkIndex Int
+  content    String
+  createdAt  DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
 }

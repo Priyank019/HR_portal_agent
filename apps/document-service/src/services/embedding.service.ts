@@ -1,10 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
 
-const embeddingModel = 'text-embedding-004';
+// const embeddingModel = 'text-embedding-004';
 
 export type EmbeddingVector = number[];
 
 const getEmbeddingClient = () => {
+  console.log("GEMINI_API_KEY:", process.env.GEMINI_API_KEY ? "Loaded" : "Missing");
   const embeddingApiKey = process.env.GEMINI_API_KEY;
 
   if (!embeddingApiKey) {
@@ -36,8 +37,11 @@ export const embeddingService = {
 
     const ai = getEmbeddingClient();
     const response = await ai.models.embedContent({
-      model: embeddingModel,
+      model: "gemini-embedding-2",
       contents: normalizedChunkText,
+      config: {
+        outputDimensionality: 768,
+      },
     });
 
     return extractEmbeddingVector(response.embeddings?.[0]?.values);
@@ -52,8 +56,12 @@ export const embeddingService = {
 
     const ai = getEmbeddingClient();
     const response = await ai.models.embedContent({
-      model: embeddingModel,
+      model: "gemini-embedding-2",
       contents: normalizedChunkTexts,
+      config: {
+        outputDimensionality: 768,
+      },
+    
     });
 
     return (response.embeddings ?? []).map((embedding) => extractEmbeddingVector(embedding.values));

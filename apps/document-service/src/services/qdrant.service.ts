@@ -1,5 +1,6 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { env } from '../config/env.js';
+import { randomUUID } from "node:crypto";
 
 const collectionName = 'hr_documents';
 
@@ -32,7 +33,7 @@ const getCollectionNames = async () => {
   return response.collections.map((collection: { name: string }) => collection.name);
 };
 
-const getPointId = (documentId: string, chunkIndex: number) => `${documentId}:${chunkIndex}`;
+const getPointId = (chunkId: string) => chunkId;
 
 export const qdrantService = {
   async initialize() {
@@ -87,7 +88,8 @@ export const qdrantService = {
     await qdrant.upsert(collectionName, {
       wait: true,
       points: documentChunks.map((chunk) => ({
-        id: getPointId(chunk.documentId, chunk.chunkIndex),
+        id: randomUUID(),
+        // id: getPointId(chunk.chunkId),
         vector: chunk.vector,
         payload: {
           documentId: chunk.documentId,

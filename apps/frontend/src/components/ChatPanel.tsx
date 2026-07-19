@@ -1,5 +1,5 @@
 import { FormEvent, useMemo, useState } from 'react';
-import { chatApi } from '../lib/chat-api';
+import { type ChatResponse, chatApi } from '../lib/chat-api';
 
 type Message = {
   role: 'question' | 'response';
@@ -10,6 +10,7 @@ export function ChatPanel() {
   const [question, setQuestion] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState<string | null>(null);
   const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
+  const [currentResponse, setCurrentResponse] = useState<ChatResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -38,14 +39,16 @@ export function ChatPanel() {
     setErrorMessage(null);
     setCurrentQuestion(trimmed);
     setCurrentAnswer(null);
+    setCurrentResponse(null);
     setIsLoading(true);
 
     try {
-    await chatApi.ask(trimmed, (partialAnswer) => {
-        setCurrentAnswer(partialAnswer);
-    });
+      await chatApi.ask(trimmed, (partialResponse) => {
+        setCurrentAnswer(partialResponse.answer);
+        setCurrentResponse(partialResponse);
+      });
 
-    setQuestion('');
+      setQuestion('');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to fetch chat response';
       setErrorMessage(message);
@@ -84,6 +87,41 @@ export function ChatPanel() {
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
             <span>Loading response...</span>
+          </div>
+        ) : null}
+
+        {currentResponse ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+            <div className="flex flex-wrap gap-4">
+              <p>
+                <span className="font-semibold text-slate-900">Retrieved chunks:</span> {currentResponse.retrievedChunkCount}
+              </p>
+              <p>
+                <span className="font-semibold text-slate-900">Similarity scores:</span>{' '}
+                {currentResponse.similarityScores.length > 0
+                  ? currentResponse.similarityScores.map((score) => score.toFixed(4)).join(', ')
+                  : 'None'}
+              </p>
+            </div>
+
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Sources</p>
+              {currentResponse.sources.length > 0 ? (
+                currentResponse.sources.map((source) => (
+                  <div
+                    key={`${source.documentId}-${source.chunkIndex}`}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2"
+                  >
+                    <p className="font-medium text-slate-900">{source.fileName}</p>
+                    <p className="text-xs text-slate-500">
+                      Document {source.documentId} · Chunk {source.chunkIndex}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-slate-500">No source documents were retrieved.</p>
+              )}
+            </div>
           </div>
         ) : null}
 

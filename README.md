@@ -10,3 +10,18 @@ This repository contains the HR Portal Agent monorepo structure for multiple app
 - docs/: documentation
 - scripts/: automation scripts
 - .github/: GitHub workflows and templates
+
+
+
+run npm run dev
+// taskkill /IM node.exe /F
+// npm run dev
+// Email:
+// admin@hrportal.com
+// 
+// Password:
+// Admin@123
+
+
+in cmd  : wsl --install
+Quad : docker run -d --name qdrant -p 6333:6333 -p 6334:6334 qdrant/qdrant
