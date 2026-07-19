@@ -14,7 +14,7 @@ const envSchema = z.object({
     AUTH_SERVICE_URL: z.string().url().default("http://localhost:4001"),
     RAG_SERVICE_URL: z.string().url().default("http://localhost:4002"),
     DOCUMENT_SERVICE_URL: z.string().url().default("http://localhost:4003"),
-    CORS_ORIGIN: z.string().default("http://10.197.7.142:3000"),
+    CORS_ORIGIN: z.string().default("http://172.26.144.1:3000"),
 });
 
 export const env = envSchema.parse(process.env);

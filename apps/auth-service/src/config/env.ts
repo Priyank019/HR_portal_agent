@@ -25,7 +25,7 @@ const envSchema = z.object({
 
   JWT_REFRESH_TTL: z.string().default("7d"),
 
-  CORS_ORIGIN: z.string().default("http://10.197.7.142:3000"),
+  CORS_ORIGIN: z.string().default("http://172.26.144.1:3000"),
 });
 
 export const env = envSchema.parse(process.env);
