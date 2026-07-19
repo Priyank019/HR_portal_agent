@@ -1,13 +1,3 @@
-import axios from 'axios';
-
-type ChatRequest = {
-  question: string;
-};
-
-type ChatResponse = {
-  answer: string;
-};
-
 const gatewayBaseUrl =
   import.meta.env.VITE_API_GATEWAY_URL ?? "http://localhost:4000";
 

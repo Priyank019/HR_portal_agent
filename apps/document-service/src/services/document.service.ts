@@ -25,4 +25,18 @@ export const documentService = {
 
     await documentRepository.deleteById(id);
   },
+
+  createUploadedDocument(input: {
+    fileName: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+    storagePath: string;
+    uploadedBy: string;
+  }) {
+    return documentRepository.create({
+      ...input,
+      status: 'UPLOADED',
+    });
+  },
 };

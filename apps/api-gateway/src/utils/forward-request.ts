@@ -13,6 +13,8 @@ const hopByHopHeaders = new Set([
 
 export const forwardRequest = async (req: Request, res: Response, targetUrl: string) => {
   const headers = new Headers();
+  const contentTypeHeader = typeof req.headers['content-type'] === 'string' ? req.headers['content-type'] : '';
+  const isMultipartForm = contentTypeHeader.includes('multipart/form-data');
 
   for (const [key, value] of Object.entries(req.headers)) {
     if (!value || hopByHopHeaders.has(key.toLowerCase())) {
@@ -30,9 +32,11 @@ export const forwardRequest = async (req: Request, res: Response, targetUrl: str
   }
 
   const hasBody = !['GET', 'HEAD'].includes(req.method);
-  const body = hasBody ? JSON.stringify(req.body ?? {}) : undefined;
+  const body = hasBody
+    ? (isMultipartForm ? (req as unknown as BodyInit) : JSON.stringify(req.body ?? {}))
+    : undefined;
 
-  if (hasBody && !headers.has('content-type')) {
+  if (hasBody && !isMultipartForm && !headers.has('content-type')) {
     headers.set('content-type', 'application/json');
   }
 
@@ -45,6 +49,7 @@ export const forwardRequest = async (req: Request, res: Response, targetUrl: str
     method: req.method,
     headers,
     body,
+    ...(isMultipartForm ? { duplex: 'half' as const } : {}),
   });
   console.log("\n========== RESPONSE FROM AUTH ==========");
     console.log("Status:", response.status);

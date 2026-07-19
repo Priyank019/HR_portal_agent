@@ -20,4 +20,18 @@ export const documentRepository = {
       where: { id },
     });
   },
+
+  create(data: {
+    fileName: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+    storagePath: string;
+    status: 'UPLOADED' | 'PROCESSING' | 'PROCESSED' | 'FAILED';
+    uploadedBy: string;
+  }) {
+    return prisma.document.create({
+      data,
+    });
+  },
 };

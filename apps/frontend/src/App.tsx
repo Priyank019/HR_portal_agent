@@ -10,6 +10,7 @@ import { RequireAuth, RequireRole } from './components/route-guards';
 import { ChatPanel } from './components/ChatPanel';
 import { AppShell } from './layouts/AppShell';
 import { AccessDeniedPage } from './pages/AccessDeniedPage';
+import { DocumentsPage } from './pages/DocumentsPage';
 import { LoginPage } from './pages/LoginPage';
 
 function App() {
@@ -23,7 +24,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/assistant" element={<AssistantPage />} />
-          <Route path="/documents" element={<PlaceholderPage title="Documents" icon={<FileText size={18} />} />} />
+          <Route path="/documents" element={<DocumentsPage />} />
           <Route path="/history" element={<PlaceholderPage title="Chat History" icon={<MessageSquareText size={18} />} />} />
           <Route path="/analytics" element={<PlaceholderPage title="Analytics" icon={<ChartColumnIncreasing size={18} />} />} />
 
