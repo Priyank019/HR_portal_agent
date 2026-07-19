@@ -26,7 +26,21 @@ model Document {
   uploadedBy   String
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+  chunks       DocumentChunk[]
 
   @@index([uploadedBy])
   @@index([status])
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  documentId String
+  chunkIndex Int
+  content    String
+  createdAt  DateTime @default(now())
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@unique([documentId, chunkIndex])
 }

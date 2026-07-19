@@ -135,6 +135,14 @@ exports.Prisma.DocumentScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.DocumentChunkScalarFieldEnum = {
+  id: 'id',
+  documentId: 'documentId',
+  chunkIndex: 'chunkIndex',
+  content: 'content',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -152,7 +160,8 @@ exports.DocumentStatus = exports.$Enums.DocumentStatus = {
 };
 
 exports.Prisma.ModelName = {
-  Document: 'Document'
+  Document: 'Document',
+  DocumentChunk: 'DocumentChunk'
 };
 
 /**
