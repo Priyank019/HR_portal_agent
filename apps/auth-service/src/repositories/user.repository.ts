@@ -7,6 +7,12 @@ export const userRepository = {
     });
   },
 
+  findByEmployeeId(employeeId: string) {
+    return prisma.user.findUnique({
+      where: { employeeId },
+    });
+  },
+
   findById(id: string) {
     return prisma.user.findUnique({
       where: { id },
@@ -14,10 +20,16 @@ export const userRepository = {
   },
 
   create(data: {
+    employeeId?: string | null;
     name: string;
     email: string;
     passwordHash: string;
     role: 'EMPLOYEE' | 'HR' | 'ADMIN';
+    department?: string | null;
+    designation?: string | null;
+    mustChangePassword?: boolean;
+    isActive?: boolean;
+    createdById?: string | null;
   }) {
     return prisma.user.create({
       data,

@@ -59,6 +59,55 @@ export const authService = {
     return issueAuthResponse(user, tokens);
   },
 
+  async createHrAccount(input: {
+    employeeId: string;
+    name: string;
+    email: string;
+    department: string;
+    designation: string;
+    password: string;
+    createdById: string;
+  }) {
+    const employeeId = input.employeeId.trim();
+    const email = input.email.toLowerCase().trim();
+
+    const [existingEmployeeId, existingEmail] = await Promise.all([
+      userRepository.findByEmployeeId(employeeId),
+      userRepository.findByEmail(email),
+    ]);
+
+    if (existingEmployeeId) {
+      throw conflict('Employee ID already exists');
+    }
+
+    if (existingEmail) {
+      throw conflict('Email already exists');
+    }
+
+    const createdUser = await userRepository.create({
+      employeeId,
+      name: input.name.trim(),
+      email,
+      passwordHash: await hashPassword(input.password),
+      role: 'HR',
+      department: input.department.trim(),
+      designation: input.designation.trim(),
+      mustChangePassword: true,
+      isActive: true,
+      createdById: input.createdById,
+    });
+
+    return {
+      id: createdUser.id,
+      employeeId: createdUser.employeeId,
+      name: createdUser.name,
+      email: createdUser.email,
+      role: createdUser.role,
+      createdAt: createdUser.createdAt.toISOString(),
+      updatedAt: createdUser.updatedAt.toISOString(),
+    };
+  },
+
   async login(input: LoginRequest): Promise<AuthResponse> {
     const email = input.email.toLowerCase().trim();
     const userRecord = await userRepository.findByEmail(email);

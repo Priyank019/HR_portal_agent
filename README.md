@@ -25,3 +25,8 @@ run npm run dev
 
 in cmd  : wsl --install
 Quad : docker run -d --name qdrant -p 6333:6333 -p 6334:6334 qdrant/qdrant
+
+
+hr1: 
+hr1@hrportal.com
+pass : Hr1@hrportal

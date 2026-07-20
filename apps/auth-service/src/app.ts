@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { authRouter } from './routes/auth.routes.js';
+import { adminRouter } from './routes/admin.routes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -28,6 +29,7 @@ export const createApp = () => {
   });
 
   app.use('/auth', authRouter);
+  app.use('/admin', adminRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

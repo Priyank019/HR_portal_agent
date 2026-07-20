@@ -9,6 +9,7 @@ import {
 import { RequireAuth, RequireRole } from './components/route-guards';
 import { ChatPanel } from './components/ChatPanel';
 import { AppShell } from './layouts/AppShell';
+import { CreateHrPage } from './pages/CreateHrPage';
 import { AccessDeniedPage } from './pages/AccessDeniedPage';
 import { DocumentsPage } from './pages/DocumentsPage';
 import { LoginPage } from './pages/LoginPage';
@@ -34,7 +35,8 @@ function App() {
           </Route>
 
           <Route element={<RequireRole allowedRoles={['ADMIN']} />}>
-            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin" element={<Navigate to="/admin/hr" replace />} />
+            <Route path="/admin/hr" element={<CreateHrPage />} />
           </Route>
 
           <Route path="/profile" element={<PlaceholderPage title="Profile" icon={<LayoutDashboard size={18} />} />} />
@@ -157,16 +159,6 @@ function HRDashboardPage() {
           </div>
         </div>
       </section>
-    </div>
-  );
-}
-
-function AdminPage() {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-10 shadow-sm">
-      <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Admin view</p>
-      <h2 className="mt-2 text-3xl font-semibold text-slate-900">Admin Console</h2>
-      <p className="mt-2 text-sm text-slate-600">Reserved for platform administrators.</p>
     </div>
   );
 }

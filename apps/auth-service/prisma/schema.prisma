@@ -15,14 +15,22 @@ enum Role {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  name          String
-  email         String         @unique
-  passwordHash  String
-  role          Role           @default(EMPLOYEE)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  refreshTokens RefreshToken[]
+  id                String         @id @default(cuid())
+  employeeId        String?        @unique
+  name              String
+  email             String         @unique
+  passwordHash      String
+  role              Role           @default(EMPLOYEE)
+  department        String?
+  designation       String?
+  mustChangePassword Boolean        @default(false)
+  isActive          Boolean         @default(true)
+  createdById       String?
+  createdBy         User?          @relation("UserCreatedBy", fields: [createdById], references: [id])
+  createdUsers      User[]         @relation("UserCreatedBy")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  refreshTokens     RefreshToken[]
 }
 
 model RefreshToken {

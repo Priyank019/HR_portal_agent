@@ -30,7 +30,7 @@ const sidebarItems: SidebarItem[] = [
   { label: 'Chat History', icon: History, to: '/history' },
   { label: 'Analytics', icon: ChartColumnIncreasing, to: '/analytics' },
   { label: 'HR Dashboard', icon: BriefcaseBusiness, to: '/hr', roles: ['HR', 'ADMIN'] },
-  { label: 'Admin', icon: ShieldCheck, to: '/admin', roles: ['ADMIN'] },
+  { label: 'HR Management', icon: ShieldCheck, to: '/admin/hr', roles: ['ADMIN'] },
   { label: 'Profile', icon: CircleUserRound, to: '/profile' },
   { label: 'Settings', icon: Settings, to: '/settings' },
 ];

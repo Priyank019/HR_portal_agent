@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { authRoleSchema } from '@hr-portal/auth-contracts';
+import { authRoleSchema, type AuthRole } from '@hr-portal/auth-contracts';
 import { unauthorized, forbidden } from '../errors/http-error.js';
 import { verifyAccessToken } from '../utils/jwt.js';
 
@@ -29,7 +29,7 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction) =
   }
 };
 
-export const authorize = (...roles: Array<'Employee' | 'HR' | 'Admin'>) => {
+export const authorize = (...roles: AuthRole[]) => {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
