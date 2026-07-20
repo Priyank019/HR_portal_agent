@@ -21,17 +21,21 @@ export type Conversation = {
 
 type QueueQuestionResult = {
   assistantMessageId: string;
-  conversationId: string;
 };
 
 type ChatState = {
-  activeConversationId: string;
+  activeConversationId: string | null;
   conversations: Conversation[];
   messages: ChatMessage[];
   conversationMessagesById: Record<string, ChatMessage[]>;
-  createConversation: () => string;
-  setActiveConversation: (conversationId: string) => void;
-  queueQuestion: (question: string) => QueueQuestionResult;
+  restoredUserId: string | null;
+  hydrateConversations: (conversations: Conversation[], userId: string) => void;
+  clearState: () => void;
+  resetForNewChat: () => void;
+  setActiveConversation: (conversationId: string | null) => void;
+  upsertConversation: (conversation: Conversation) => void;
+  setConversationMessages: (conversationId: string, messages: ChatMessage[]) => void;
+  queueQuestion: (conversationId: string, question: string) => QueueQuestionResult;
   applyAssistantResponse: (conversationId: string, assistantMessageId: string, response: ChatResponse) => void;
   finalizeAssistantMessage: (conversationId: string, assistantMessageId: string) => void;
   failAssistantMessage: (conversationId: string, assistantMessageId: string, errorMessage: string) => void;
@@ -59,55 +63,74 @@ const getConversationPreview = (messages: ChatMessage[]) => {
 const sortConversations = (conversations: Conversation[]) =>
   [...conversations].sort((left, right) => right.updatedAt - left.updatedAt);
 
-const createConversationRecord = (): Conversation => ({
-  id: createId(),
-  title: 'New chat',
-  preview: 'Start a new conversation',
-  updatedAt: Date.now(),
-});
-
-const initialConversation = createConversationRecord();
-
 export const useChatStore = create<ChatState>((set, get) => ({
-  activeConversationId: initialConversation.id,
-  conversations: [initialConversation],
+  activeConversationId: null,
+  conversations: [],
   messages: [],
-  conversationMessagesById: {
-    [initialConversation.id]: [],
-  },
-  createConversation: () => {
-    const conversation = createConversationRecord();
+  conversationMessagesById: {},
+  restoredUserId: null,
+  hydrateConversations: (conversations, userId) => {
+    set((state) => {
+      const preservedMessages = Object.fromEntries(
+        conversations
+          .filter((conversation) => state.conversationMessagesById[conversation.id])
+          .map((conversation) => [conversation.id, state.conversationMessagesById[conversation.id]]),
+      );
 
-    set((state) => ({
-      activeConversationId: conversation.id,
-      conversations: sortConversations([conversation, ...state.conversations]),
+      return {
+        activeConversationId: null,
+        conversations: sortConversations(conversations),
+        messages: [],
+        conversationMessagesById: preservedMessages,
+        restoredUserId: userId,
+      };
+    });
+  },
+  clearState: () => {
+    set({
+      activeConversationId: null,
+      conversations: [],
       messages: [],
-      conversationMessagesById: {
-        ...state.conversationMessagesById,
-        [conversation.id]: [],
-      },
-    }));
-
-    return conversation.id;
+      conversationMessagesById: {},
+      restoredUserId: null,
+    });
   },
-  setActiveConversation: (conversationId: string) => {
+  resetForNewChat: () => {
+    set({
+      activeConversationId: null,
+      messages: [],
+    });
+  },
+  setActiveConversation: (conversationId) => {
     const state = get();
-
-    if (!state.conversationMessagesById[conversationId]) {
-      return;
-    }
 
     set({
       activeConversationId: conversationId,
-      messages: state.conversationMessagesById[conversationId],
+      messages: conversationId ? state.conversationMessagesById[conversationId] ?? [] : [],
     });
   },
-  queueQuestion: (question: string) => {
+  upsertConversation: (conversation) => {
+    set((state) => ({
+      conversations: sortConversations([
+        conversation,
+        ...state.conversations.filter((currentConversation) => currentConversation.id !== conversation.id),
+      ]),
+    }));
+  },
+  setConversationMessages: (conversationId, messages) => {
+    set((state) => ({
+      activeConversationId: conversationId,
+      messages,
+      conversationMessagesById: {
+        ...state.conversationMessagesById,
+        [conversationId]: messages,
+      },
+    }));
+  },
+  queueQuestion: (conversationId, question) => {
     const assistantMessageId = createId();
     const userMessageId = createId();
     const timestamp = Date.now();
-    const state = get();
-    const conversationId = state.activeConversationId;
 
     set((current) => {
       const currentMessages = current.conversationMessagesById[conversationId] ?? [];
@@ -126,6 +149,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ];
 
       return {
+        activeConversationId: conversationId,
         conversations: sortConversations(
           current.conversations.map((conversation) =>
             conversation.id === conversationId
@@ -146,7 +170,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       };
     });
 
-    return { assistantMessageId, conversationId };
+    return { assistantMessageId };
   },
   applyAssistantResponse: (conversationId, assistantMessageId, response) => {
     set((state) => {

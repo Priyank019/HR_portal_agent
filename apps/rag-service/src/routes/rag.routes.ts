@@ -89,6 +89,11 @@ ragRouter.post('/chat', async (req, res, next) => {
 
     res.end();
   } catch (error) {
-    next(error);
+      if (res.headersSent) {
+        res.end();
+        return;
+      }
+
+      next(error);
   }
 });

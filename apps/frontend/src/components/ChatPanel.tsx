@@ -1,7 +1,22 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { MessageSquareText, Plus, SendHorizontal } from 'lucide-react';
-import { type ChatResponse, chatApi } from '../lib/chat-api';
-import { useChatStore } from '../stores/chat-store';
+import { type ChatConversation, type ChatConversationMessage, type ChatResponse, chatApi } from '../lib/chat-api';
+import { useAuth } from '../context/auth-context';
+import { useChatStore, type ChatMessage } from '../stores/chat-store';
+
+const toConversationSummary = (conversation: ChatConversation) => ({
+  id: conversation.id,
+  title: conversation.title,
+  preview: conversation.messages.length > 0 ? conversation.messages[conversation.messages.length - 1].content : 'Start a new conversation',
+  updatedAt: new Date(conversation.updatedAt).getTime(),
+});
+
+const toChatMessages = (messages: ChatConversationMessage[]): ChatMessage[] =>
+  messages.map((message) => ({
+    id: message.id,
+    role: message.role === 'USER' ? 'user' : 'assistant',
+    text: message.content,
+  }));
 
 const formatTimestamp = (value: number) =>
   new Intl.DateTimeFormat(undefined, {
@@ -12,18 +27,27 @@ const formatTimestamp = (value: number) =>
   }).format(value);
 
 export function ChatPanel() {
+  const { accessToken, isAuthenticated, user } = useAuth();
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [isConversationLoading, setIsConversationLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const activeConversationId = useChatStore((state) => state.activeConversationId);
   const conversations = useChatStore((state) => state.conversations);
   const messages = useChatStore((state) => state.messages);
-  const createConversation = useChatStore((state) => state.createConversation);
+  const restoredUserId = useChatStore((state) => state.restoredUserId);
+  const hydrateConversations = useChatStore((state) => state.hydrateConversations);
+  const clearState = useChatStore((state) => state.clearState);
+  const resetForNewChat = useChatStore((state) => state.resetForNewChat);
   const setActiveConversation = useChatStore((state) => state.setActiveConversation);
+  const upsertConversation = useChatStore((state) => state.upsertConversation);
+  const setConversationMessages = useChatStore((state) => state.setConversationMessages);
   const queueQuestion = useChatStore((state) => state.queueQuestion);
   const applyAssistantResponse = useChatStore((state) => state.applyAssistantResponse);
   const finalizeAssistantMessage = useChatStore((state) => state.finalizeAssistantMessage);
   const failAssistantMessage = useChatStore((state) => state.failAssistantMessage);
+  const conversationMessagesById = useChatStore((state) => state.conversationMessagesById);
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === activeConversationId) ?? conversations[0],
@@ -34,9 +58,67 @@ export function ChatPanel() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isLoading]);
 
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken || !user) {
+      clearState();
+      return;
+    }
+
+    if (restoredUserId === user.id) {
+      return;
+    }
+
+    let active = true;
+    setIsHistoryLoading(true);
+
+    void chatApi
+      .listConversations(accessToken)
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        hydrateConversations(response.items.slice(0, 15).map(toConversationSummary), user.id);
+      })
+      .catch(() => {
+        if (!active) {
+          return;
+        }
+
+        hydrateConversations([], user.id);
+      })
+      .finally(() => {
+        if (active) {
+          setIsHistoryLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [accessToken, clearState, hydrateConversations, isAuthenticated, restoredUserId, user]);
+
   const startNewChat = () => {
-    createConversation();
+    resetForNewChat();
     setDraft('');
+  };
+
+  const openConversation = async (conversationId: string) => {
+    setActiveConversation(conversationId);
+
+    if (!accessToken || conversationMessagesById[conversationId]) {
+      return;
+    }
+
+    setIsConversationLoading(true);
+
+    try {
+      const conversation = await chatApi.getConversation(conversationId, accessToken);
+      upsertConversation(toConversationSummary(conversation));
+      setConversationMessages(conversation.id, toChatMessages(conversation.messages));
+    } finally {
+      setIsConversationLoading(false);
+    }
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -44,11 +126,20 @@ export function ChatPanel() {
 
     const trimmed = draft.trim();
 
-    if (!trimmed || isLoading || !activeConversation) {
+    if (!trimmed || isLoading || !accessToken) {
       return;
     }
 
-    const { assistantMessageId, conversationId } = queueQuestion(trimmed);
+    let conversationId = activeConversationId;
+
+    if (!conversationId) {
+      const createdConversation = await chatApi.createConversation(accessToken);
+      upsertConversation(toConversationSummary(createdConversation));
+      conversationId = createdConversation.id;
+      setActiveConversation(conversationId);
+    }
+
+    const { assistantMessageId } = queueQuestion(conversationId, trimmed);
 
     setDraft('');
     setIsLoading(true);
@@ -56,7 +147,7 @@ export function ChatPanel() {
     try {
       await chatApi.ask(trimmed, (partialResponse: ChatResponse) => {
         applyAssistantResponse(conversationId, assistantMessageId, partialResponse);
-      });
+      }, undefined, { accessToken, conversationId });
 
       finalizeAssistantMessage(conversationId, assistantMessageId);
     } catch (error) {
@@ -84,6 +175,7 @@ export function ChatPanel() {
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3">
           <div className="space-y-2">
+            {isHistoryLoading ? <p className="px-2 text-sm text-slate-500">Loading conversations...</p> : null}
             {conversations.map((conversation) => {
               const isActive = conversation.id === activeConversation?.id;
 
@@ -91,7 +183,9 @@ export function ChatPanel() {
                 <button
                   key={conversation.id}
                   type="button"
-                  onClick={() => setActiveConversation(conversation.id)}
+                  onClick={() => {
+                    void openConversation(conversation.id);
+                  }}
                   className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                     isActive
                       ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
@@ -112,6 +206,9 @@ export function ChatPanel() {
                 </button>
               );
             })}
+            {!isHistoryLoading && conversations.length === 0 ? (
+              <p className="px-2 text-sm text-slate-500">No previous conversations.</p>
+            ) : null}
           </div>
         </div>
       </aside>
@@ -123,7 +220,11 @@ export function ChatPanel() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50/80 px-4 py-6 sm:px-6">
-          {activeConversation && messages.length > 0 ? (
+          {isConversationLoading && messages.length === 0 ? (
+            <div className="flex h-full min-h-[22rem] items-center justify-center">
+              <p className="text-sm text-slate-500">Loading conversation...</p>
+            </div>
+          ) : activeConversation && messages.length > 0 ? (
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
               {messages.map((message) => {
                 const isUser = message.role === 'user';
@@ -205,7 +306,7 @@ export function ChatPanel() {
                 </div>
                 <h4 className="mt-5 text-xl font-semibold text-slate-900">Start a new conversation</h4>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Ask about policies, documents, or HR workflows. This UI keeps a local conversation history while still sending each message through the existing backend endpoint.
+                  Ask about policies, documents, or HR workflows. Your recent conversations will appear in the sidebar, but this screen stays empty until you open one or send a new message.
                 </p>
               </div>
             </div>

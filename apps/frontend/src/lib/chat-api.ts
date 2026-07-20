@@ -1,6 +1,28 @@
 const gatewayBaseUrl =
   import.meta.env.VITE_API_GATEWAY_URL ?? 'http://localhost:4000';
 
+type ChatRequestOptions = {
+  accessToken?: string | null;
+  conversationId?: string;
+};
+
+export type ChatConversationMessage = {
+  id: string;
+  conversationId: string;
+  role: 'USER' | 'ASSISTANT';
+  content: string;
+  createdAt: string;
+};
+
+export type ChatConversation = {
+  id: string;
+  title: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatConversationMessage[];
+};
+
 export type ChatSource = {
   documentId: string;
   fileName: string;
@@ -31,20 +53,73 @@ type ChatStreamEvent =
     } & ChatResponse);
 
 export const chatApi = {
+  async listConversations(accessToken: string): Promise<{ items: ChatConversation[] }> {
+    const response = await fetch(`${gatewayBaseUrl}/chat/conversations`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load conversations');
+    }
+
+    return (await response.json()) as { items: ChatConversation[] };
+  },
+
+  async getConversation(conversationId: string, accessToken: string): Promise<ChatConversation> {
+    const response = await fetch(`${gatewayBaseUrl}/chat/conversations/${conversationId}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to load conversation');
+    }
+
+    return (await response.json()) as ChatConversation;
+  },
+
+  async createConversation(accessToken: string, title?: string): Promise<ChatConversation> {
+    const response = await fetch(`${gatewayBaseUrl}/chat/conversations`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(title ? { title } : {}),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create conversation');
+    }
+
+    return (await response.json()) as ChatConversation;
+  },
+
   async ask(
     question: string,
     onChunk: (response: ChatResponse) => void,
     limit?: number,
+    options?: ChatRequestOptions,
   ): Promise<ChatResponse> {
     const response = await fetch(`${gatewayBaseUrl}/api/chat`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
+        ...(options?.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
       },
       body: JSON.stringify({
         question,
         limit,
+        conversationId: options?.conversationId,
       }),
     });
 

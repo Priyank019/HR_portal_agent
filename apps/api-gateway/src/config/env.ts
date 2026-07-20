@@ -13,6 +13,7 @@ const envSchema = z.object({
     PORT: z.coerce.number().int().positive().default(4000),
     AUTH_SERVICE_URL: z.string().url().default("http://localhost:4001"),
     RAG_SERVICE_URL: z.string().url().default("http://localhost:4002"),
+    CHAT_SERVICE_URL: z.string().url().default("http://localhost:4006"),
     DOCUMENT_SERVICE_URL: z.string().url().default("http://localhost:4003"),
     CORS_ORIGIN: z.string().default("http://172.26.144.1:3000"),
 });
@@ -23,5 +24,6 @@ console.log("========== API GATEWAY ==========");
 console.log("Gateway CORS_ORIGIN:", env.CORS_ORIGIN);
 console.log("Gateway AUTH_SERVICE_URL:", env.AUTH_SERVICE_URL);
 console.log("Gateway RAG_SERVICE_URL:", env.RAG_SERVICE_URL);
+console.log("Gateway CHAT_SERVICE_URL:", env.CHAT_SERVICE_URL);
 console.log("Gateway DOCUMENT_SERVICE_URL:", env.DOCUMENT_SERVICE_URL);
 console.log("=================================");
