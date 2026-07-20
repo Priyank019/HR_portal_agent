@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { authRouter } from './routes/auth.routes.js';
 import { adminRouter } from './routes/admin.routes.js';
+import { hrRouter } from './routes/hr.routes.js';
 import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -30,6 +31,7 @@ export const createApp = () => {
 
   app.use('/auth', authRouter);
   app.use('/admin', adminRouter);
+  app.use('/hr', hrRouter);
   app.use(notFoundHandler);
   app.use(errorHandler);
 

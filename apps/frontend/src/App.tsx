@@ -9,10 +9,12 @@ import {
 import { RequireAuth, RequireRole } from './components/route-guards';
 import { ChatPanel } from './components/ChatPanel';
 import { AppShell } from './layouts/AppShell';
+import { CreateEmployeePage } from './pages/CreateEmployeePage';
 import { CreateHrPage } from './pages/CreateHrPage';
 import { AccessDeniedPage } from './pages/AccessDeniedPage';
 import { DocumentsPage } from './pages/DocumentsPage';
 import { LoginPage } from './pages/LoginPage';
+import { EmployeeManagementPage } from './pages/EmployeeManagementPage';
 
 function App() {
   return (
@@ -32,6 +34,11 @@ function App() {
           <Route element={<RequireRole allowedRoles={['HR', 'ADMIN']} />}>
             <Route path="/hr" element={<HRDashboardPage />} />
             <Route path="/hr-dashboard" element={<Navigate to="/hr" replace />} />
+          </Route>
+
+          <Route element={<RequireRole allowedRoles={['HR']} />}>
+            <Route path="/hr/employees" element={<EmployeeManagementPage />} />
+            <Route path="/hr/employees/new" element={<CreateEmployeePage />} />
           </Route>
 
           <Route element={<RequireRole allowedRoles={['ADMIN']} />}>

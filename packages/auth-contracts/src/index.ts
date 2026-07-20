@@ -72,6 +72,19 @@ export const createHrResponseSchema = z.object({
   }),
 });
 
+export const createEmployeeRequestSchema = createHrRequestSchema;
+
+export const createEmployeeResponseSchema = z.object({
+  message: z.literal('Employee created successfully'),
+  employee: z.object({
+    id: z.string(),
+    employeeId: z.string().nullable(),
+    name: z.string(),
+    email: z.string().email(),
+    role: z.literal('EMPLOYEE'),
+  }),
+});
+
 export const meResponseSchema = z.object({
   user: authUserSchema,
 });
@@ -85,4 +98,6 @@ export type TokenPair = z.infer<typeof tokenPairSchema>;
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 export type CreateHrRequest = z.infer<typeof createHrRequestSchema>;
 export type CreateHrResponse = z.infer<typeof createHrResponseSchema>;
+export type CreateEmployeeRequest = z.infer<typeof createEmployeeRequestSchema>;
+export type CreateEmployeeResponse = z.infer<typeof createEmployeeResponseSchema>;
 export type MeResponse = z.infer<typeof meResponseSchema>;

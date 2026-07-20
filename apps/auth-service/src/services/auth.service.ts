@@ -59,7 +59,7 @@ export const authService = {
     return issueAuthResponse(user, tokens);
   },
 
-  async createHrAccount(input: {
+  async createManagedAccount(input: {
     employeeId: string;
     name: string;
     email: string;
@@ -67,6 +67,7 @@ export const authService = {
     designation: string;
     password: string;
     createdById: string;
+    role: 'HR' | 'EMPLOYEE';
   }) {
     const employeeId = input.employeeId.trim();
     const email = input.email.toLowerCase().trim();
@@ -89,7 +90,7 @@ export const authService = {
       name: input.name.trim(),
       email,
       passwordHash: await hashPassword(input.password),
-      role: 'HR',
+      role: input.role,
       department: input.department.trim(),
       designation: input.designation.trim(),
       mustChangePassword: true,
@@ -106,6 +107,30 @@ export const authService = {
       createdAt: createdUser.createdAt.toISOString(),
       updatedAt: createdUser.updatedAt.toISOString(),
     };
+  },
+
+  async createHrAccount(input: {
+    employeeId: string;
+    name: string;
+    email: string;
+    department: string;
+    designation: string;
+    password: string;
+    createdById: string;
+  }) {
+    return this.createManagedAccount({ ...input, role: 'HR' });
+  },
+
+  async createEmployeeAccount(input: {
+    employeeId: string;
+    name: string;
+    email: string;
+    department: string;
+    designation: string;
+    password: string;
+    createdById: string;
+  }) {
+    return this.createManagedAccount({ ...input, role: 'EMPLOYEE' });
   },
 
   async login(input: LoginRequest): Promise<AuthResponse> {

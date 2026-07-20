@@ -6,6 +6,7 @@ import { authGatewayRouter } from './routes/auth.routes.js';
 import { adminGatewayRouter } from './routes/admin.routes.js';
 import { chatGatewayRouter } from './routes/chat.routes.js';
 import { documentGatewayRouter } from './routes/document.routes.js';
+import { hrGatewayRouter } from './routes/hr.routes.js';
 import { ragGatewayRouter } from './routes/rag.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
@@ -32,6 +33,7 @@ export const createApp = () => {
 
   app.use('/auth', authGatewayRouter);
   app.use('/admin', adminGatewayRouter);
+  app.use('/hr', hrGatewayRouter);
   app.use('/chat', chatGatewayRouter);
   app.use('/documents', documentGatewayRouter);
   app.use('/api', ragGatewayRouter);

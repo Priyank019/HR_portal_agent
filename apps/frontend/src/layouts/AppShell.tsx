@@ -23,7 +23,7 @@ type SidebarItem = {
   roles?: AuthRole[];
 };
 
-const sidebarItems: SidebarItem[] = [
+const adminSidebarItems: SidebarItem[] = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
   { label: 'AI Assistant', icon: Sparkles, to: '/assistant' },
   { label: 'Documents', icon: FileText, to: '/documents' },
@@ -35,10 +35,21 @@ const sidebarItems: SidebarItem[] = [
   { label: 'Settings', icon: Settings, to: '/settings' },
 ];
 
+const hrSidebarItems: SidebarItem[] = [
+  { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
+  { label: 'AI Assistant', icon: Sparkles, to: '/assistant' },
+  { label: 'Documents', icon: FileText, to: '/documents' },
+  { label: 'Employee Management', icon: BriefcaseBusiness, to: '/hr/employees' },
+  { label: 'Profile', icon: CircleUserRound, to: '/profile' },
+];
+
 export function AppShell() {
   const { user, logout } = useAuth();
 
-  const visibleItems = sidebarItems.filter((item) => !item.roles || (user ? item.roles.includes(user.role) : false));
+  const visibleItems =
+    user?.role === 'HR'
+      ? hrSidebarItems
+      : adminSidebarItems.filter((item) => !item.roles || (user ? item.roles.includes(user.role) : false));
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -82,24 +93,39 @@ export function AppShell() {
 
       <div className="flex">
         <aside className="hidden min-h-[calc(100vh-73px)] w-72 border-r border-slate-200 bg-white px-4 py-6 lg:block">
-          <nav className="space-y-2">
-            {visibleItems.map(({ label, icon: Icon, to }) => (
-              <NavLink
-                key={label}
-                to={to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${
-                    isActive
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                  }`
-                }
+          <div className="flex h-full flex-col">
+            <nav className="space-y-2">
+              {visibleItems.map(({ label, icon: Icon, to }) => (
+                <NavLink
+                  key={label}
+                  to={to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${
+                      isActive
+                        ? 'bg-slate-900 text-white shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    }`
+                  }
+                >
+                  <Icon size={18} />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
+            </nav>
+
+            {user?.role === 'HR' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  void logout();
+                }}
+                className="mt-auto flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
               >
-                <Icon size={18} />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          </nav>
+                <LogOut size={18} />
+                <span>Logout</span>
+              </button>
+            ) : null}
+          </div>
         </aside>
 
         <main className="flex-1 p-6">
