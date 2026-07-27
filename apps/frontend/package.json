@@ -2,7 +2,7 @@
   "name": "@hr-portal/frontend",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://Priyank_019.github.io/HR_portal_agent",
+  "homepage": "https://Priyank019.github.io/HR_portal_agent",
   "type": "module",
   "scripts": {
     "dev": "vite",

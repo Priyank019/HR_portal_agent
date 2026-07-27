@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/HR_portal_agent/',
   server: {
     host: '0.0.0.0',
     port: 3000,
